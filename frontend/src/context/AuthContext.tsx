@@ -1,5 +1,6 @@
 import * as AuthAPI from "@/api/endpoints/auth";
 import type { LoginFormValues } from "@/components/auth/login-form";
+import type { RegisterFormValues } from "@/components/auth/register-form";
 import { type UseMutationResult, useMutation } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -14,6 +15,7 @@ type AuthContextType = {
   user: User;
   isAuthenticated: boolean;
   login: (data: LoginFormValues) => void;
+  register: (data: RegisterFormValues) => void;
   loading: boolean;
   error: Error | null;
   logoutMutation: UseMutationResult<LogoutResponse, Error, void, unknown>;
@@ -43,6 +45,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } catch (error: any) {
         console.log(error);
         toast.error(error?.response?.data?.message || "Login failed. Please try again.");
+      }
+    },
+    [search, navigate]
+  );
+  const register = useCallback(
+    async (data: RegisterFormValues) => {
+      try {
+        const res = await AuthAPI.register(data);
+        toast.success(res.message || "Registered successfully");
+        localStorage.setItem("token", res.token);
+        setUser(res.user);
+        navigate({ to: search?.redirect || "/user" });
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || "Registration failed. Please try again.");
       }
     },
     [search, navigate]
@@ -94,8 +110,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       logoutMutation,
       loading,
       error,
+      register,
     }),
-    [user, login, logoutMutation, loading, error]
+    [user, login, logoutMutation, register, loading, error]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

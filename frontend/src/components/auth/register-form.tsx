@@ -10,13 +10,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-import { toast } from "sonner";
 
 const formSchema = z
   .object({
@@ -37,7 +36,7 @@ const formSchema = z
     message: "Passwords do not match.",
     path: ["password_confirmation"],
   });
-export type FormValues = z.infer<typeof formSchema>;
+export type RegisterFormValues = z.infer<typeof formSchema>;
 
 const defaultValues = {
   name: "",
@@ -47,20 +46,12 @@ const defaultValues = {
 };
 
 export function RegisterForm({ className, ...props }: React.ComponentProps<"div">) {
+  const { register } = useAuth();
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
-  async function onSubmit(data: FormValues) {
-    try {
-      const res = await AuthAPI.register(data);
-      toast.success(res.message);
-      form.reset();
-      localStorage.setItem("token", res.token);
-    } catch (error: any) {
-      toast.error(error?.message || "Something went wrong.");
-    }
-  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -70,7 +61,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form onSubmit={form.handleSubmit(register)}>
               <div className="flex flex-col gap-6">
                 <FormField
                   control={form.control}
@@ -131,7 +122,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
 
               <div className="mt-4 text-center text-sm">
                 Already have an account?{" "}
-                <Link to="." className="underline underline-offset-4">
+                <Link to="/login" className="underline underline-offset-4">
                   Log in
                 </Link>
               </div>

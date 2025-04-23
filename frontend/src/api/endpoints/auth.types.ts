@@ -1,6 +1,7 @@
 type RegisterResponse = {
 	message: string;
 	token: string;
+	user: User;
 };
 type User = {
 	name: string;

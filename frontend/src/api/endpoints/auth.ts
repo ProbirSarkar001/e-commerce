@@ -1,5 +1,5 @@
 import type { LoginFormValues } from "@/components/auth/login-form";
-import type { FormValues as RegisterFormValues } from "@/components/auth/register-form";
+import type { RegisterFormValues } from "@/components/auth/register-form";
 import instance from "../axios";
 
 export async function register(data: RegisterFormValues) {

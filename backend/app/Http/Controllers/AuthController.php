@@ -33,6 +33,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'User created successfully',
             'token' => $token,
+            'user' => $user->only('name', 'email'),
         ], 201);
     }
     // Login
