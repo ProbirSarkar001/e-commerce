@@ -20,7 +20,20 @@ export async function login(data: LoginFormValues) {
 	return response.data;
 }
 
+type LogoutResponse = {
+	message: string;
+};
 export async function logout() {
-	const response = await instance.post("/logout");
+	const response = await instance.get<LogoutResponse>("/logout");
+	return response.data;
+}
+
+// User
+type User = {
+	name: string;
+	email: string;
+};
+export async function getUser() {
+	const response = await instance.get<User>("/user");
 	return response.data;
 }

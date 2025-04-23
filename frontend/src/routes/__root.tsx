@@ -1,13 +1,13 @@
+import { Toaster } from "@/components/ui/sonner";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createRootRoute({
   component: () => (
     <>
       <Outlet />
       <TanStackRouterDevtools />
-      <Toaster />
+      <Toaster richColors theme="light" />
     </>
   ),
 });
