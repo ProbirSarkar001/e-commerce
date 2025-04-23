@@ -7,7 +7,8 @@ export const Route = createFileRoute("/_authenticated/user/")({
 });
 
 function RouteComponent() {
-  const { logout } = useAuth();
+  const { logoutMutation } = useAuth();
+  const { mutate: logout, isPending } = logoutMutation;
   return (
     <div>
       Hello "/user/"!
@@ -16,7 +17,9 @@ function RouteComponent() {
         Dashboard
       </Link>
       {/* Logout */}
-      <Button onClick={logout}>Logout</Button>
+      <Button onClick={() => logout()} disabled={isPending}>
+        {isPending ? "Logging out..." : "Logout"}
+      </Button>
     </div>
   );
 }

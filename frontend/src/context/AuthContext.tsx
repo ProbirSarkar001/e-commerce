@@ -1,8 +1,9 @@
 import * as AuthAPI from "@/api/endpoints/auth";
-import { useRouter } from "@tanstack/react-router";
+import type { LoginFormValues } from "@/components/auth/login-form";
+import { type UseMutationResult, useMutation } from "@tanstack/react-query";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
 type User = {
   name: string;
   email: string;
@@ -12,10 +13,10 @@ type User = {
 type AuthContextType = {
   user: User;
   isAuthenticated: boolean;
-  login: (userData: User, token?: string) => void;
-  logout: () => Promise<void>;
+  login: (data: LoginFormValues) => void;
   loading: boolean;
   error: Error | null;
+  logoutMutation: UseMutationResult<LogoutResponse, Error, void, unknown>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,34 +26,41 @@ type AuthProviderProps = {
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const router = useRouter();
+  const search = useSearch({ strict: false });
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const navigate = useNavigate();
 
-  const login = useCallback((userData: User, token?: string) => {
-    setUser(userData);
-    if (token) {
-      localStorage.setItem("token", token);
-    }
-  }, []);
+  const login = useCallback(
+    async (data: LoginFormValues) => {
+      try {
+        const res = await AuthAPI.login(data);
+        toast.success(res.message || "Logged in successfully");
+        localStorage.setItem("token", res.token);
+        setUser(res.user);
+        navigate({ to: search?.redirect || "/user" });
+      } catch (error: any) {
+        console.log(error);
+        toast.error(error?.response?.data?.message || "Login failed. Please try again.");
+      }
+    },
+    [search, navigate]
+  );
 
-  const logout = useCallback(async () => {
-    try {
-      setLoading(true);
-      await AuthAPI.logout();
-      toast.success("Logged out successfully");
+  const logoutMutation = useMutation({
+    mutationFn: AuthAPI.logout,
+    onSuccess: (data) => {
       localStorage.removeItem("token");
       setUser(null);
-      router.navigate({ to: "/login" });
-    } catch (err) {
-      console.error("Error logging out:", err);
+      toast.success(data?.message || "Logged out successfully");
+      navigate({ to: "/login" });
+    },
+    onError: (err) => {
       toast.error("Failed to log out");
       setError(err instanceof Error ? err : new Error("Logout failed"));
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+    },
+  });
 
   const getUser = useCallback(async () => {
     try {
@@ -83,11 +91,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       user,
       isAuthenticated: !!user,
       login,
-      logout,
+      logoutMutation,
       loading,
       error,
     }),
-    [user, login, logout, loading, error]
+    [user, login, logoutMutation, loading, error]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

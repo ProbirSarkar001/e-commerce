@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, redirect, useRouter, useSearch } from "@tanstack/react-router";
@@ -33,29 +34,11 @@ const defaultValues: LoginFormValues = {
 };
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
-  const router = useRouter();
-  const search = useSearch({ from: "/login/" });
+  const { login } = useAuth();
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
-
-  async function onSubmit(data: LoginFormValues) {
-    try {
-      const res = await AuthAPI.login(data);
-      toast.success(res.message || "Logged in successfully");
-      form.reset();
-      localStorage.setItem("token", res.token);
-      if (search?.redirect) {
-        router.history.push(search.redirect);
-      } else {
-        redirect({ to: "/user" });
-      }
-    } catch (error: any) {
-      console.log(error);
-      toast.error(error?.response?.data?.message || "Login failed. Please try again.");
-    }
-  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -66,7 +49,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form onSubmit={form.handleSubmit(login)}>
               <div className="flex flex-col gap-6">
                 <FormField
                   control={form.control}

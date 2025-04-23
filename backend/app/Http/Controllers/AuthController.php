@@ -54,6 +54,8 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'User logged in successfully',
             'token' => $token,
+            // Fix: Remove parentheses after $user since it's already a model instance
+            'user' => $user->only('name', 'email'),
         ], 200);
     }
     // Logout
